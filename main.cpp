@@ -2,11 +2,20 @@
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(200, 200), "SFML works!");
-    sf::CircleShape shape(100.f);
-    shape.setFillColor(sf::Color::Green);
+    sf::RenderWindow window(sf::VideoMode(1920, 1080), "Timber!");
 
-    while (window.isOpen())
+
+    sf::Texture textureBackground;
+    textureBackground.loadFromFile("graphics/background.png");
+    //데이터형                        //리소스 경로를 받음
+
+    sf::Sprite spriteBackground;
+    spriteBackground.setTexture(textureBackground);
+
+    
+     
+
+    while (window.isOpen()) // bool형 반환하므로 조건식
     {
         sf::Event event;
         while (window.pollEvent(event))
@@ -15,10 +24,17 @@ int main()
                 window.close();
         }
 
-        window.clear();
-        window.draw(shape);
+        window.clear();   
+
+
+        window.draw(spriteBackground);
+
+
         window.display();
     }
 
     return 0;
 }
+
+
+//class 사용 
