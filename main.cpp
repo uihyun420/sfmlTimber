@@ -10,10 +10,6 @@
 int main()
 {
 
-	srand((int)time(0));
-	//현재시간 리턴 
-
-
 	
 
 
@@ -103,6 +99,27 @@ int main()
 	sf::Vector2f cloud1Velocity(static_cast<float>(rand() % 200 + 50), 0.f);
 	sf::Vector2f cloud2Velocity(static_cast<float>(rand() % 200 + 50), 0.f);
 
+	srand((int)time(0));
+	//현재시간 리턴 
+
+	const int NUM_CLOUDS = 3;
+
+	sf::Sprite clouds[NUM_CLOUDS];
+	sf::Vector2f cloudDirections[NUM_CLOUDS];
+
+	float cloudSpeeds[NUM_CLOUDS];
+	int cloudHeights[NUM_CLOUDS] = { 0, 200, 400 };
+	for (int i = 0; i < NUM_CLOUDS; i++)
+	{
+		clouds[i].setTexture(texturecloud);
+		clouds[i].setPosition(0, cloudHeights[i]);
+		clouds[i].setScale(-1.f, 1.f); // 처음엔 왼쪽 → 오른쪽 이동
+		cloudDirections[i] = { 1.f, 0.f };
+		cloudSpeeds[i] = rand() % 200 + 100;
+	}
+
+
+
 	while (window.isOpen()) 
 	{
 
@@ -150,92 +167,45 @@ int main()
 		}
 
 
+		// cloud 배열 
 
-		// --- Cloud 0 Update ---
-		sf::Vector2f posCloud = spritecloud.getPosition();
-		posCloud += clouddirection * cloudspeed * deltaTime;
-		spritecloud.setPosition(posCloud);
 
-		if (posCloud.x < -300 || posCloud.x > 1920 + 300)
+		for (int i = 0; i < NUM_CLOUDS; ++i)
 		{
-			float random = static_cast<float>(rand()) / RAND_MAX;
-			if (random < 0.5f)
+			// 1. 구름 이동
+			sf::Vector2f pos = clouds[i].getPosition();
+			pos += cloudDirections[i] * cloudSpeeds[i] * deltaTime;
+			clouds[i].setPosition(pos);
+
+			// 2. 화면 밖이면 방향, 속도, 위치 재설정
+			if (pos.x < -300 || pos.x > 1920 + 300)
 			{
-				clouddirection.x = 1.f;
-				spritecloud.setScale(-1.f, 1.f);
-				spritecloud.setPosition(-250, 0);
+				float random = static_cast<float>(rand()) / RAND_MAX;
+				if (random > 0.5f)
+				{
+					cloudDirections[i].x = 1.f;
+					clouds[i].setScale(-1.f, 1.f);
+					clouds[i].setPosition(-250, cloudHeights[i]);
+				}
+				else
+				{
+					cloudDirections[i].x = -1.f;
+					clouds[i].setScale(1.f, 1.f);
+					clouds[i].setPosition(1920 + 250, cloudHeights[i]);
+				}
+
+				cloudSpeeds[i] = rand() % 200 + 100;
 			}
-			else
-			{
-				clouddirection.x = -1.f;
-				spritecloud.setScale(1.f, 1.f);
-				spritecloud.setPosition(1920 + 250, 0);
-			}
-			cloudspeed = rand() % 200 + 100;
 		}
-
-
-
-
-		// --- Cloud 1 Update ---
-		sf::Vector2f posCloud1 = spritecloud1.getPosition();
-		posCloud1 += cloud1direction * cloud1speed * deltaTime;
-		spritecloud1.setPosition(posCloud1);
-
-		if (posCloud1.x < -300 || posCloud1.x > 1920 + 300)
-		{
-			float random = static_cast<float>(rand()) / RAND_MAX;
-			if (random < 0.5f)
-			{
-				cloud1direction.x = 1.f;
-				spritecloud1.setScale(-1.f, 1.f);
-				spritecloud1.setPosition(-250, 200);
-			}
-			else
-			{
-				cloud1direction.x = -1.f;
-				spritecloud1.setScale(1.f, 1.f);
-				spritecloud1.setPosition(1920 + 250, 200);
-			}
-			cloud1speed = rand() % 200 + 100;
-		}
-
-
-
-
-
-		// --- Cloud 2 Update ---
-		sf::Vector2f posCloud2 = spritecloud2.getPosition();
-		posCloud2 += cloud2direction * cloud2speed * deltaTime;
-		spritecloud2.setPosition(posCloud2);
-
-		if (posCloud2.x < -300 || posCloud2.x > 1920 + 300)
-		{
-			float random = static_cast<float>(rand()) / RAND_MAX;
-			if (random < 0.5f)
-			{
-				cloud2direction.x = 1.f;
-				spritecloud2.setScale(-1.f, 1.f);
-				spritecloud2.setPosition(-250, 400);
-			}
-			else
-			{
-				cloud2direction.x = -1.f;
-				spritecloud2.setScale(1.f, 1.f);
-				spritecloud2.setPosition(1920 + 250, 400);
-			}
-			cloud2speed = rand() % 200 + 100;
-		}
-
-
 
 		// 그리기
 		window.clear();
 		window.draw(spriteBackground);
 		window.draw(spriteTree);
-		window.draw(spritecloud);
-		window.draw(spritecloud1);
-		window.draw(spritecloud2);
+		for (int i = 0; i < NUM_CLOUDS; i++)
+		{
+			window.draw(clouds[i]);
+		}
 		window.draw(spritebee);
 		window.display();
 	}
