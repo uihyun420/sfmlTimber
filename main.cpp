@@ -30,6 +30,7 @@ void updateBranches(Side* branches, int size)
 int main()
 {
 	srand((int)time(0));
+	sf::Clock clock; // 매 프레임마다 실제로 지난 시간(delta time)을 측정 가능
 
 	sf::RenderWindow window(sf::VideoMode(1920, 1080), "Timber!");
 
@@ -57,7 +58,7 @@ int main()
 	// 
 
 	sf::Sprite spirteBackground;
-	spirteBackground.setTexture(textureBackgroud);
+	spirteBackground.setTexture(textureBackgroud); // setTexture 스프라이트에 이미지를 지정할 때 사용하는 함수
 	sf::Sprite spirteTree;
 	spirteTree.setTexture(textureTree);
 	//spirteTree.setPosition(1920 * 0.5f - textureTree.getSize().x * 0.5f, 0);
@@ -103,6 +104,7 @@ int main()
 			else
 			{
 				directionElement[i].x = -1.f;
+				spriteBackgroundElement[i].setScale(1.f, 1.f);
 				spriteBackgroundElement[i].setScale(1.f, 1.f);
 			}
 			speedElement[i] = rand() % 200 + 100;
@@ -174,12 +176,7 @@ int main()
 	bool isRight = false;
 	bool Axe = true;
 
-
-
-	bool pause = false;
-
-
-	
+	bool stop = false;
 
 	while (window.isOpen())
 	{
@@ -225,10 +222,6 @@ int main()
 					Axe = false;
 					break;
 
-
-				case sf::Keyboard::Enter:
-					pause = !pause;
-					break;
 				}
 				break;
 
