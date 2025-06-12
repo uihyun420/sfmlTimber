@@ -2,6 +2,7 @@
 #include <ctime>
 #include <cstdlib>
 
+enum class Side { LEFT, RIGHT, NONE }; // 열거형 , 사용자 정의 데이터형
 
 // 업데이트, 드로우 계속 반복
 
@@ -9,12 +10,25 @@
 
 int main()
 {
+	//데이터형 변수
+	/*Side side;
+	side = Side::LEFT;
+	if (side == Side::RIGHT)
+	{
 
-	
+	}
+	else
+	{
 
+	}
+	*/
 
+	// SFML 윈도우 생성 (1920 x 1080) 해상도, 제목은 "Timber!"
 	sf::RenderWindow window(sf::VideoMode(1920, 1080), "Timber!");
 
+
+
+	// 배경, 나무, 벌, 구름 텍스쳐 불러오기 
 
 	sf::Texture textureBackground;
 	textureBackground.loadFromFile("graphics/background.png");
@@ -30,44 +44,101 @@ int main()
 	sf::Texture texturecloud;
 	texturecloud.loadFromFile("graphics/cloud.png");
 
+	sf::Texture texturePlayer;
+	texturePlayer.loadFromFile("graphics/player.png");
+
+	sf::Texture textureBranch;
+	textureBranch.loadFromFile("graphics/branch.png");
 
 
 
+
+
+	// 요소들 스트라이트(클래스) 생성 및 텍스처 설정
 
 
 	sf::Sprite spriteBackground; //sf::Sprite는 SFML에서 이미지를 화면에 표시할 수 있게 해주는 객체
-	spriteBackground.setTexture(textureBackground);
+	spriteBackground.setTexture(textureBackground); // (점) 연산자는 객체의 멤버에 접근할 때 사용하는 연산자
 
 
 	sf::Sprite spriteTree;
 	spriteTree.setTexture(textureTree);
-	spriteTree.setPosition((1920 / 2) - (textureTree.getSize().x / 2), 0); // 스프라이트(Sprite)의 화면 내 위치를 지정하는 함수
+	spriteTree.setPosition((1920 / 2) - (textureTree.getSize().x / 2), 0);
+	// 스프라이트(Sprite)의 화면 내 위치를 지정하는 함수 
+	// 나무를 화면 중앙에 배치 (화면 너비 /2 - 나무 너비/2, y좌표)	
+
+
+
+	//sf::Sprite spriteBackgroundElement[3];          배열으로 세팅
+	//float speedElement[3];
+	//sf::Vector2f directionElement[3];
+	//for(int i = 0; i<3; i++)
+	//{
+	//	spriteBackgroundElement[i].setTexture(texturecloud);
+	//}
+
+
 
 
 
 	sf::Sprite spritebee;
-	spritebee.setTexture(texturebee);
-	spritebee.setPosition(0, 900);  
-	spritebee.setScale(-1.0f, 1.0f);
+	spritebee.setTexture(texturebee); // setTexture : SFML의 그래픽 객체(Sprite 등)에 텍스처를 입히는 함수
+	spritebee.setPosition(0, 900);   // 객체의 위치 설정 sprite.setPosition(x, y);
+	spritebee.setScale(-1.0f, 1.0f); // 객체의 크기(비율) 설정 sprite.setPosition(100, 200);
 
 
 	sf::Sprite spritecloud;
 	spritecloud.setTexture(texturecloud);
 	spritecloud.setPosition(0, 0);
-	spritecloud.setScale(-1.0f, 1.0f);
+	spritecloud.setScale(1.0f, 1.0f);
 
 	sf::Sprite spritecloud1;
 	spritecloud1.setTexture(texturecloud);
 	spritecloud1.setPosition(0, 200);
-	spritecloud1.setScale(-1.0f, 1.0f);
+	spritecloud1.setScale(1.0f, 1.0f);
 
 	sf::Sprite spritecloud2;
 	spritecloud2.setTexture(texturecloud);
 	spritecloud2.setPosition(0, 400);
-	spritecloud2.setScale(-1.0f, 1.0f);
+	spritecloud2.setScale(1.0f, 1.0f);
+
+	sf::Sprite spritePlayer;
+	spritePlayer.setTexture(texturePlayer);
+	spritePlayer.setOrigin(texturePlayer.getSize().x * 0.5f, texturePlayer.getSize().y);
+	spritePlayer.setPosition(1920*0.5f, 950.f);
+
+	
+	Side playerSide = Side::RIGHT;
+	
 
 
 
+
+
+	const int NUM_BRANCHES = 6;  //변수 앞에 const를 붙히면 변수가 상수로 변함 
+	sf::Sprite spriteBranch[NUM_BRANCHES];
+	Side sideBranch[NUM_BRANCHES] = { Side::LEFT, Side::RIGHT, Side::NONE,Side::LEFT, Side::RIGHT, Side::NONE };
+
+	for (int i = 0; i < NUM_BRANCHES; i++)
+	{
+		spriteBranch[i].setTexture(textureBranch);
+		spriteBranch[i].setOrigin(textureTree.getSize().x * -0.5f, 0.f);
+		spriteBranch[i].setPosition(1920 * 0.5, i * 150.f);
+	}
+
+
+
+
+
+	// 난수 생성을 위한 초기화 (프로그램 실행 시마다 다른 값 생성 )
+	srand(static_cast<unsigned int>(time(0)));
+
+	//  시간 측정을 위한 SFML CLock 객체
+	sf::Clock clock;
+	//sf::Vector2f v = { 200.f,0.f }; 속도 고정
+
+
+	// 벌과 구름의 이동 방향 벡터 설정 (오른쪽 방향)
 
 	sf::Vector2f beedirection = { 1.f,0.f };
 	sf::Vector2f clouddirection = { 1.f,0.f };
@@ -76,28 +147,26 @@ int main()
 
 
 
+	// 속도 범위 설정 (X축 속도만, 예 : 50 ~ 250픽셀/초)
+	float minspeed = 50.f;
+	float maxspeed = 250.f;
+
+	//벌과 구름의 속도 초기화
 	float beespeed = rand() % 200 + 100;
 	float cloudspeed = rand() % 200 + 100;;
 	float cloud1speed = rand() % 200 + 100;
 	float cloud2speed = rand() % 200 + 100;
-	// Velocity == direction * speed;
+	// Velocity == direction * speed; (velocity = 속도와 방향)
 
-	sf::Clock clock;
-	//sf::Vector2f v = { 200.f,0.f };
-
-
-	// 난수 초기화
-	srand(static_cast<unsigned int>(time(0)));  // 속도 범위 설정 (X축 속도만, 예 : 50 ~ 250픽셀/초)
-
-	//속도 범위 설정
-	float minspeed = 50.f;
-	float maxspeed = 250.f;
 
 	// 각 오브젝트의 랜덤 속도 벡터 생성
 	sf::Vector2f beeVelocity(static_cast<float>(rand() % 200 + 50), 0.f);
 	sf::Vector2f cloudVelocity(static_cast<float>(rand() % 200 + 50), 0.f);
 	sf::Vector2f cloud1Velocity(static_cast<float>(rand() % 200 + 50), 0.f);
 	sf::Vector2f cloud2Velocity(static_cast<float>(rand() % 200 + 50), 0.f);
+
+
+
 
 	srand((int)time(0));
 	//현재시간 리턴 
@@ -120,14 +189,13 @@ int main()
 
 
 
-	while (window.isOpen()) 
+	while (window.isOpen())
 	{
 
 		sf::Time time = clock.restart();  // 다시 시간을 잼
 		float deltaTime = time.asSeconds(); // 초를 실수로 반환해주는 함수
 
 		printf("%f\n", deltaTime);
-
 
 
 
@@ -167,6 +235,36 @@ int main()
 		}
 
 
+		for (int i = 0; i < NUM_BRANCHES; i++)
+		{
+			switch (sideBranch[i])
+			{
+			case Side::LEFT:
+				spriteBranch[i].setScale(-1.f, 1.f);
+				break;
+			case Side::RIGHT:
+				spriteBranch[i].setScale(1.f, 1.f);
+				break;
+			}
+		}
+
+		
+		
+			switch (playerSide)
+			{
+			case Side::LEFT:
+				spritePlayer.setScale(-1.f, 1.f);
+				spritePlayer.setPosition(1920*0.5f-200, 900);
+
+				break;
+			case Side::RIGHT:
+				spritePlayer.setScale(1.f, 1.f);
+				spritePlayer.setPosition(1920 * 0.5f + 200, 900);
+				break;
+			}
+		
+
+
 		// cloud 배열 
 
 
@@ -201,13 +299,27 @@ int main()
 		// 그리기
 		window.clear();
 		window.draw(spriteBackground);
-		window.draw(spriteTree);
 		for (int i = 0; i < NUM_CLOUDS; i++)
 		{
 			window.draw(clouds[i]);
 		}
+		window.draw(spriteTree);
+		for (int i = 0; i < NUM_BRANCHES; i++)
+		{
+			if (sideBranch[i] != Side::NONE)
+			{
+				window.draw(spriteBranch[i]);
+			}		
+		}
+
 		window.draw(spritebee);
+
+			window.draw(spritePlayer);
+
+		
+		
 		window.display();
+
 	}
 
 	return 0;
