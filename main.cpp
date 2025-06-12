@@ -4,6 +4,7 @@
 
 enum class Side { LEFT, RIGHT, NONE };
 
+
 void updateBranches(Side* branches, int size)
 {
 	for (int i = size - 1; i > 0; --i)
@@ -46,6 +47,13 @@ int main()
 	sf::Texture textureBranch;
 	textureBranch.loadFromFile("graphics/branch.png");
 
+
+	sf::Texture textureAxe;
+	textureAxe.loadFromFile("graphics/axe.png");
+
+
+
+
 	// 
 
 	sf::Sprite spirteBackground;
@@ -55,6 +63,7 @@ int main()
 	//spirteTree.setPosition(1920 * 0.5f - textureTree.getSize().x * 0.5f, 0);
 	spirteTree.setOrigin(textureTree.getSize().x * 0.5f, 0.f);
 	spirteTree.setPosition(1920 * 0.5f, 0.f);
+
 
 	sf::Sprite spriteBackgroundElement[4];
 	float speedElement[4];
@@ -106,6 +115,12 @@ int main()
 	spritePlayer.setOrigin(texturePlayer.getSize().x * 0.5f, texturePlayer.getSize().y);
 	spritePlayer.setPosition(1920 * 0.5f, 950.f);
 
+	sf::Sprite spriteAxe;
+	spriteAxe.setTexture(textureAxe);
+	spriteAxe.setOrigin(textureAxe.getSize().x * 0.5f, textureAxe.getSize().y * 0.5f);
+
+
+
 	const int NUM_BRANCHES = 6;
 	sf::Sprite spriteBranch[NUM_BRANCHES];
 	Side sideBranch[NUM_BRANCHES];
@@ -138,17 +153,34 @@ int main()
 	case Side::LEFT:
 		spritePlayer.setScale(-1.f, 1.f);
 		spritePlayer.setPosition(spirteTree.getPosition().x - 300.f, 950.f);
+		// 도끼도 왼쪽 손에 붙이기
+		spriteAxe.setPosition(spritePlayer.getPosition().x + 130.f, spritePlayer.getPosition().y - 50.f);
+		spritePlayer.setScale(-1.f, 1.f);
 		break;
 	case Side::RIGHT:
 		spritePlayer.setScale(1.f, 1.f);
 		spritePlayer.setPosition(spirteTree.getPosition().x + 300.f, 950.f);
+
+		spriteAxe.setPosition(spritePlayer.getPosition().x - 100.f, spritePlayer.getPosition().y - 50.f);
+		spritePlayer.setScale(1.f, 1.f);
 		break;
 	}
+
+
 
 	sf::Clock clock;
 
 	bool isLeft = false;
 	bool isRight = false;
+	bool Axe = true;
+
+
+
+	bool pause = false;
+
+
+	
+
 	while (window.isOpen())
 	{
 		sf::Time time = clock.restart();
@@ -161,6 +193,8 @@ int main()
 		bool isRightDown = false;
 		bool isRightUp = false;
 
+	
+
 		while (window.pollEvent(event))
 		{
 			switch (event.type)
@@ -168,6 +202,8 @@ int main()
 			case sf::Event::Closed:
 				window.close();
 				break;
+
+
 			case sf::Event::KeyPressed:
 				switch (event.key.code)
 				{
@@ -177,39 +213,45 @@ int main()
 						isLeftDown = true;
 					}
 					isLeft = true;
+					Axe = false; // 누를 땐 도끼 숨김
 					break;
 				case sf::Keyboard::Right:
 					if (!isRight)
 					{
 						isRightDown = true;
+				
 					}
 					isRight = true;
+					Axe = false;
+					break;
+
+
+				case sf::Keyboard::Enter:
+					pause = !pause;
 					break;
 				}
 				break;
+
 			case sf::Event::KeyReleased:
 				switch (event.key.code)
 				{
 				case sf::Keyboard::Left:
 					isLeft = false;
 					isLeftUp = true;
-					if (sideBranch[NUM_BRANCHES - 1] == sidePlayer)
-					{
-						printf("나뭇가지에 맞았음!\n");
-					}
+					Axe = true;
 
 					break;
 				case sf::Keyboard::Right:
 					isRight = false;
 					isRightUp = true;
-					if (sideBranch[NUM_BRANCHES - 1] == sidePlayer)
-					{
-						printf("나뭇가지에 맞았음!\n");
-					}
+					Axe = true;
+
 					break;
+
 				}
 				break;
 			}
+			
 		}
 
 		// 업데이트
@@ -218,10 +260,19 @@ int main()
 			if (isLeftDown)
 			{
 				sidePlayer = Side::LEFT;
+				if (sideBranch[NUM_BRANCHES - 1] == sidePlayer)
+				{
+					printf("나뭇가지에 맞았음!\n");
+				}
+
 			}
 			if (isRightDown)
 			{
 				sidePlayer = Side::RIGHT;
+				if (sideBranch[NUM_BRANCHES - 1] == sidePlayer)
+				{
+					printf("나뭇가지에 맞았음!\n");
+				}
 			}
 			updateBranches(sideBranch, NUM_BRANCHES);
 		}
@@ -298,10 +349,17 @@ int main()
 		case Side::LEFT:
 			spritePlayer.setScale(-1.f, 1.f);
 			spritePlayer.setPosition(spirteTree.getPosition().x - 300.f, 950.f);
+
+			//도끼 위치도 업데이트
+			spriteAxe.setPosition(spritePlayer.getPosition().x + 130.f, spritePlayer.getPosition().y - 55.f);
+			spriteAxe.setScale(-1.f, 1.f);
 			break;
 		case Side::RIGHT:
 			spritePlayer.setScale(1.f, 1.f);
 			spritePlayer.setPosition(spirteTree.getPosition().x + 300.f, 950.f);
+
+			spriteAxe.setPosition(spritePlayer.getPosition().x - 100.f, spritePlayer.getPosition().y - 55.f);
+			spriteAxe.setScale(-1.f, 1.f);
 			break;
 		}
 
@@ -329,9 +387,17 @@ int main()
 			window.draw(spriteBackgroundElement[i]);
 		}
 
+
 		window.draw(spritePlayer);
 
+		if (Axe)
+		{
+			window.draw(spriteAxe);
+		}
+		
+
 		window.display();
+
 	}
 
 	return 0;
