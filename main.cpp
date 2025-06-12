@@ -2,12 +2,11 @@
 #include <ctime>
 #include <cstdlib>
 
-enum class Side { LEFT, RIGHT, NONE }; // 열거형 , 사용자 정의 데이터형
-
+enum class Side { LEFT, RIGHT, NONE };
 
 void updateBranches(Side* branches, int size)
 {
-	for (int i = size - 1; i > 0; i--)
+	for (int i = size - 1; i > 0; --i)
 	{
 		branches[i] = branches[i - 1];
 	}
@@ -18,139 +17,103 @@ void updateBranches(Side* branches, int size)
 	case 0:
 		branches[0] = Side::LEFT;
 		break;
-
 	case 1:
 		branches[0] = Side::RIGHT;
 		break;
-
 	default:
 		branches[0] = Side::NONE;
 		break;
 	}
-
 }
-
-
-
-
-// 업데이트, 드로우 계속 반복
-
-
 
 int main()
 {
-	//데이터형 변수
-	/*Side side;
-	side = Side::LEFT;
-	if (side == Side::RIGHT)
-	{
+	srand((int)time(0));
 
-	}
-	else
-	{
-
-	}
-	*/
-
-	// SFML 윈도우 생성 (1920 x 1080) 해상도, 제목은 "Timber!"
 	sf::RenderWindow window(sf::VideoMode(1920, 1080), "Timber!");
 
-
-
-	// 배경, 나무, 벌, 구름 텍스쳐 불러오기 
-
-	sf::Texture textureBackground;
-	textureBackground.loadFromFile("graphics/background.png");
-	//데이터형                        //리소스 경로 
-
+	//
+	sf::Texture textureBackgroud;
+	textureBackgroud.loadFromFile("graphics/background.png");
 	sf::Texture textureTree;
 	textureTree.loadFromFile("graphics/tree.png");
-
-
-	sf::Texture texturebee;
-	texturebee.loadFromFile("graphics/bee.png");
-
-	sf::Texture texturecloud;
-	texturecloud.loadFromFile("graphics/cloud.png");
-
+	sf::Texture textureBee;
+	textureBee.loadFromFile("graphics/bee.png");
+	sf::Texture textureCloud;
+	textureCloud.loadFromFile("graphics/cloud.png");
 	sf::Texture texturePlayer;
 	texturePlayer.loadFromFile("graphics/player.png");
-
 	sf::Texture textureBranch;
 	textureBranch.loadFromFile("graphics/branch.png");
 
+	// 
 
+	sf::Sprite spirteBackground;
+	spirteBackground.setTexture(textureBackgroud);
+	sf::Sprite spirteTree;
+	spirteTree.setTexture(textureTree);
+	//spirteTree.setPosition(1920 * 0.5f - textureTree.getSize().x * 0.5f, 0);
+	spirteTree.setOrigin(textureTree.getSize().x * 0.5f, 0.f);
+	spirteTree.setPosition(1920 * 0.5f, 0.f);
 
+	sf::Sprite spriteBackgroundElement[4];
+	float speedElement[4];
+	sf::Vector2f directionElement[4];
 
+	int cloudCount = 3;
 
-	// 요소들 스트라이트(클래스) 생성 및 텍스처 설정
-
-
-	sf::Sprite spriteBackground; //sf::Sprite는 SFML에서 이미지를 화면에 표시할 수 있게 해주는 객체
-	spriteBackground.setTexture(textureBackground); // (점) 연산자는 객체의 멤버에 접근할 때 사용하는 연산자
-
-
-	sf::Sprite spriteTree;
-	spriteTree.setTexture(textureTree);
-	spriteTree.setPosition((1920 / 2) - (textureTree.getSize().x / 2), 0);
-	// 스프라이트(Sprite)의 화면 내 위치를 지정하는 함수 
-	// 나무를 화면 중앙에 배치 (화면 너비 /2 - 나무 너비/2, y좌표)	
-
-
-
-	//sf::Sprite spriteBackgroundElement[3];          배열으로 세팅
-	//float speedElement[3];
-	//sf::Vector2f directionElement[3];
-	//for(int i = 0; i<3; i++)
-	//{
-	//	spriteBackgroundElement[i].setTexture(texturecloud);
-	//}
-
-
-
-
-
-	sf::Sprite spritebee;
-	spritebee.setTexture(texturebee); // setTexture : SFML의 그래픽 객체(Sprite 등)에 텍스처를 입히는 함수
-	spritebee.setPosition(0, 900);   // 객체의 위치 설정 sprite.setPosition(x, y);
-	spritebee.setScale(-1.0f, 1.0f); // 객체의 크기(비율) 설정 sprite.setPosition(100, 200);
-
-
-	sf::Sprite spritecloud;
-	spritecloud.setTexture(texturecloud);
-	spritecloud.setPosition(0, 0);
-	spritecloud.setScale(1.0f, 1.0f);
-
-	sf::Sprite spritecloud1;
-	spritecloud1.setTexture(texturecloud);
-	spritecloud1.setPosition(0, 200);
-	spritecloud1.setScale(1.0f, 1.0f);
-
-	sf::Sprite spritecloud2;
-	spritecloud2.setTexture(texturecloud);
-	spritecloud2.setPosition(0, 400);
-	spritecloud2.setScale(1.0f, 1.0f);
+	for (int i = 0; i < 4; ++i)
+	{
+		if (i < cloudCount)
+		{
+			spriteBackgroundElement[i].setTexture(textureCloud);
+			speedElement[i] = rand() % 200 + 100;
+			float random = (float)rand() / RAND_MAX; // 0.f ~ 1.f
+			if (random < 0.5f)
+			{
+				directionElement[i].x = 1.f;
+				spriteBackgroundElement[i].setScale(-1.f, 1.f);
+				spriteBackgroundElement[i].setPosition(-150, rand() % 300 + 100);
+			}
+			else
+			{
+				directionElement[i].x = -1.f;
+				spriteBackgroundElement[i].setScale(1.f, 1.f);
+				spriteBackgroundElement[i].setPosition(1920 + 150, rand() % 300 + 100);
+			}
+		}
+		else
+		{
+			spriteBackgroundElement[i].setTexture(textureBee);
+			float random = (float)rand() / RAND_MAX; // 0.f ~ 1.f
+			if (random < 0.5f)
+			{
+				directionElement[i].x = 1.f;
+				spriteBackgroundElement[i].setScale(-1.f, 1.f);
+			}
+			else
+			{
+				directionElement[i].x = -1.f;
+				spriteBackgroundElement[i].setScale(1.f, 1.f);
+			}
+			speedElement[i] = rand() % 200 + 100;
+			spriteBackgroundElement[i].setPosition(500, 700);
+		}
+	}
 
 	sf::Sprite spritePlayer;
 	spritePlayer.setTexture(texturePlayer);
 	spritePlayer.setOrigin(texturePlayer.getSize().x * 0.5f, texturePlayer.getSize().y);
 	spritePlayer.setPosition(1920 * 0.5f, 950.f);
 
-
-	Side sideplayer = Side::RIGHT; // 플레이어가 바라보는 방향을 설정하기 위해 위치 변수 선언
-
-
-
-	const int NUM_BRANCHES = 6;  //변수 앞에 const를 붙히면 변수가 상수로 변함 
+	const int NUM_BRANCHES = 6;
 	sf::Sprite spriteBranch[NUM_BRANCHES];
-	Side sideBranch[NUM_BRANCHES] = { Side::LEFT, Side::RIGHT, Side::NONE,Side::LEFT, Side::RIGHT, Side::NONE };
-
-	for (int i = 0; i < NUM_BRANCHES; i++)
+	Side sideBranch[NUM_BRANCHES];
+	for (int i = 0; i < NUM_BRANCHES; ++i)
 	{
 		spriteBranch[i].setTexture(textureBranch);
 		spriteBranch[i].setOrigin(textureTree.getSize().x * -0.5f, 0.f);
-		spriteBranch[i].setPosition(1920 * 0.5, i * 150.f);
-
+		spriteBranch[i].setPosition(1920 * 0.5f, i * 150.f);
 
 		int r = rand() % 3;
 		switch (r)
@@ -158,11 +121,9 @@ int main()
 		case 0:
 			sideBranch[i] = Side::LEFT;
 			break;
-
 		case 1:
 			sideBranch[i] = Side::RIGHT;
 			break;
-
 		default:
 			sideBranch[i] = Side::NONE;
 			break;
@@ -171,79 +132,35 @@ int main()
 	sideBranch[NUM_BRANCHES - 1] = Side::NONE;
 
 
-
-
-	// 난수 생성을 위한 초기화 (프로그램 실행 시마다 다른 값 생성 )
-	srand(static_cast<unsigned int>(time(0)));
-
-	//  시간 측정을 위한 SFML CLock 객체
-	sf::Clock clock;
-	//sf::Vector2f v = { 200.f,0.f }; 속도 고정
-
-
-	// 벌과 구름의 이동 방향 벡터 설정 (오른쪽 방향)
-
-	sf::Vector2f beedirection = { 1.f,0.f };
-	sf::Vector2f clouddirection = { 1.f,0.f };
-	sf::Vector2f cloud1direction = { 1.f,0.f };
-	sf::Vector2f cloud2direction = { 1.f,0.f };
-
-
-
-	// 속도 범위 설정 (X축 속도만, 예 : 50 ~ 250픽셀/초)
-	float minspeed = 50.f;
-	float maxspeed = 250.f;
-
-	//벌과 구름의 속도 초기화
-	float beespeed = rand() % 200 + 100;
-	float cloudspeed = rand() % 200 + 100;;
-	float cloud1speed = rand() % 200 + 100;
-	float cloud2speed = rand() % 200 + 100;
-	// Velocity == direction * speed; (velocity = 속도와 방향)
-
-
-	// 각 오브젝트의 랜덤 속도 벡터 생성
-	sf::Vector2f beeVelocity(static_cast<float>(rand() % 200 + 50), 0.f);
-	sf::Vector2f cloudVelocity(static_cast<float>(rand() % 200 + 50), 0.f);
-	sf::Vector2f cloud1Velocity(static_cast<float>(rand() % 200 + 50), 0.f);
-	sf::Vector2f cloud2Velocity(static_cast<float>(rand() % 200 + 50), 0.f);
-
-
-
-
-	srand((int)time(0));
-	//현재시간 리턴 
-
-	const int NUM_CLOUDS = 3;
-
-	sf::Sprite clouds[NUM_CLOUDS];
-	sf::Vector2f cloudDirections[NUM_CLOUDS];
-
-	float cloudSpeeds[NUM_CLOUDS];
-	int cloudHeights[NUM_CLOUDS] = { 0, 200, 400 };
-	for (int i = 0; i < NUM_CLOUDS; i++)
+	Side sidePlayer = Side::LEFT;
+	switch (sidePlayer)
 	{
-		clouds[i].setTexture(texturecloud);
-		clouds[i].setPosition(0, cloudHeights[i]);
-		clouds[i].setScale(-1.f, 1.f); // 처음엔 왼쪽 → 오른쪽 이동
-		cloudDirections[i] = { 1.f, 0.f };
-		cloudSpeeds[i] = rand() % 200 + 100;
+	case Side::LEFT:
+		spritePlayer.setScale(-1.f, 1.f);
+		spritePlayer.setPosition(spirteTree.getPosition().x - 300.f, 950.f);
+		break;
+	case Side::RIGHT:
+		spritePlayer.setScale(1.f, 1.f);
+		spritePlayer.setPosition(spirteTree.getPosition().x + 300.f, 950.f);
+		break;
 	}
 
+	sf::Clock clock;
 
-
+	bool isLeft = false;
+	bool isRight = false;
 	while (window.isOpen())
 	{
-
-		sf::Time time = clock.restart();  // 다시 시간을 잼
-		float deltaTime = time.asSeconds(); // 초를 실수로 반환해주는 함수
-
-		printf("%f\n", deltaTime);
-
-
+		sf::Time time = clock.restart();
+		float deltaTime = time.asSeconds();
 
 		// 이벤트 루프
 		sf::Event event;
+		bool isLeftDown = false;
+		bool isLeftUp = false;
+		bool isRightDown = false;
+		bool isRightUp = false;
+
 		while (window.pollEvent(event))
 		{
 			switch (event.type)
@@ -255,52 +172,115 @@ int main()
 				switch (event.key.code)
 				{
 				case sf::Keyboard::Left:
-					sideplayer = Side::LEFT;
-					updateBranches(sideBranch, NUM_BRANCHES);
+					if (!isLeft)
+					{
+						isLeftDown = true;
+					}
+					isLeft = true;
 					break;
-
 				case sf::Keyboard::Right:
-					sideplayer = Side::RIGHT;
-					updateBranches(sideBranch, NUM_BRANCHES);
+					if (!isRight)
+					{
+						isRightDown = true;
+					}
+					isRight = true;
 					break;
 				}
 				break;
 			case sf::Event::KeyReleased:
+				switch (event.key.code)
+				{
+				case sf::Keyboard::Left:
+					isLeft = false;
+					isLeftUp = true;
+					if (sideBranch[NUM_BRANCHES - 1] == sidePlayer)
+					{
+						printf("나뭇가지에 맞았음!\n");
+					}
+
+					break;
+				case sf::Keyboard::Right:
+					isRight = false;
+					isRightUp = true;
+					if (sideBranch[NUM_BRANCHES - 1] == sidePlayer)
+					{
+						printf("나뭇가지에 맞았음!\n");
+					}
+					break;
+				}
 				break;
 			}
 		}
 
-
-
-
-
-		//업데이트
-
-
-		sf::Vector2f pos = spritebee.getPosition();
-		pos += beedirection * beespeed * deltaTime;
-		spritebee.setPosition(pos);
-
-		if (pos.x < -200 || pos.x > 1920 + 200)
+		// 업데이트
+		if (isRightDown || isLeftDown)
 		{
-			float random = static_cast<float>(rand()) / RAND_MAX;
-			if (random < 0.5f)
+			if (isLeftDown)
 			{
-				beedirection.x = 1.f;
-				spritebee.setScale(-1.f, 1.f);
-				spritebee.setPosition(-150, 800);
+				sidePlayer = Side::LEFT;
 			}
-			else
+			if (isRightDown)
 			{
-				beedirection.x = -1.f;
-				spritebee.setScale(1.f, 1.f);
-				spritebee.setPosition(1920 + 150, 800);
+				sidePlayer = Side::RIGHT;
 			}
-			beespeed = rand() % 200 + 100;
+			updateBranches(sideBranch, NUM_BRANCHES);
 		}
 
 
-		for (int i = 0; i < NUM_BRANCHES; i++)
+
+		for (int i = 0; i < 3; ++i)
+		{
+
+
+			sf::Vector2f position = spriteBackgroundElement[i].getPosition();
+			position += directionElement[i] * speedElement[i] * deltaTime;
+			spriteBackgroundElement[i].setPosition(position);
+			if (position.x < -200 || position.x > 1920 + 200)
+			{
+				float random = (float)rand() / RAND_MAX;
+				if (random < 0.5f)
+				{
+					directionElement[i].x = 1.f;
+					spriteBackgroundElement[i].setScale(-1.f, 1.f);
+					spriteBackgroundElement[i].setPosition(0 - 150, rand() % 300 + 100);
+				}
+				else
+				{
+					directionElement[i].x = -1.f;
+					spriteBackgroundElement[i].setScale(1.f, 1.f);
+					spriteBackgroundElement[i].setPosition(1920 + 150, rand() % 300 + 100);
+				}
+				speedElement[i] = rand() % 200 + 100;
+			}
+		}
+
+		sf::Vector2f beePos = spriteBackgroundElement[3].getPosition();
+		beePos += directionElement[3] * speedElement[3] * deltaTime;
+		spriteBackgroundElement[3].setPosition(beePos);
+
+		// 화면 밖이면 방향/위치/속도 랜덤 설정
+		if (beePos.x < -200 || beePos.x > 1920 + 200)
+		{
+			float random = static_cast<float>(rand()) / RAND_MAX;
+
+			if (random < 0.5f)
+			{
+				directionElement[3].x = 1.f;
+				spriteBackgroundElement[3].setScale(-1.f, 1.f);
+				spriteBackgroundElement[3].setPosition(-150.f, 800.f); // 왼쪽에서 등장
+			}
+			else
+			{
+				directionElement[3].x = -1.f;
+				spriteBackgroundElement[3].setScale(1.f, 1.f);
+				spriteBackgroundElement[3].setPosition(1920.f + 150.f, 800.f); // 오른쪽에서 등장
+			}
+
+			speedElement[3] = rand() % 200 + 100; // 속도 재설정
+		}
+
+
+		for (int i = 0; i < NUM_BRANCHES; ++i)
 		{
 			switch (sideBranch[i])
 			{
@@ -313,67 +293,30 @@ int main()
 			}
 		}
 
-
-
-
-		switch (sideplayer)
+		switch (sidePlayer)
 		{
 		case Side::LEFT:
 			spritePlayer.setScale(-1.f, 1.f);
-			spritePlayer.setPosition(spriteTree.getPosition().x - 300.f, 950.f);
-
+			spritePlayer.setPosition(spirteTree.getPosition().x - 300.f, 950.f);
 			break;
 		case Side::RIGHT:
 			spritePlayer.setScale(1.f, 1.f);
-			spritePlayer.setPosition(spriteTree.getPosition().x + 300.f, 950.f);
+			spritePlayer.setPosition(spirteTree.getPosition().x + 300.f, 950.f);
 			break;
 		}
 
 
 
 
-
-
-		// cloud 배열 
-
-
-		for (int i = 0; i < NUM_CLOUDS; ++i)
-		{
-			// 1. 구름 이동
-			sf::Vector2f pos = clouds[i].getPosition();
-			pos += cloudDirections[i] * cloudSpeeds[i] * deltaTime;
-			clouds[i].setPosition(pos);
-
-			// 2. 화면 밖이면 방향, 속도, 위치 재설정
-			if (pos.x < -300 || pos.x > 1920 + 300)
-			{
-				float random = static_cast<float>(rand()) / RAND_MAX;
-				if (random > 0.5f)
-				{
-					cloudDirections[i].x = 1.f;
-					clouds[i].setScale(-1.f, 1.f);
-					clouds[i].setPosition(-250, cloudHeights[i]);
-				}
-				else
-				{
-					cloudDirections[i].x = -1.f;
-					clouds[i].setScale(1.f, 1.f);
-					clouds[i].setPosition(1920 + 250, cloudHeights[i]);
-				}
-
-				cloudSpeeds[i] = rand() % 200 + 100;
-			}
-		}
-
 		// 그리기
 		window.clear();
-		window.draw(spriteBackground);
-		for (int i = 0; i < NUM_CLOUDS; i++)
+		window.draw(spirteBackground);
+		for (int i = 0; i < cloudCount; ++i)
 		{
-			window.draw(clouds[i]);
+			window.draw(spriteBackgroundElement[i]);
 		}
-		window.draw(spriteTree);
-		for (int i = 0; i < NUM_BRANCHES; i++)
+		window.draw(spirteTree);
+		for (int i = 0; i < NUM_BRANCHES; ++i)
 		{
 			if (sideBranch[i] != Side::NONE)
 			{
@@ -381,19 +324,15 @@ int main()
 			}
 		}
 
-		window.draw(spritebee);
+		for (int i = cloudCount; i < 4; ++i)
+		{
+			window.draw(spriteBackgroundElement[i]);
+		}
 
 		window.draw(spritePlayer);
 
-
-
 		window.display();
-
 	}
 
 	return 0;
 }
-
-// 난수  
-// 실시간프로그래밍 개념 
-// 델타타임 : 프레임 간의 시간 차이 (현재시간 - 반복할때 돌아온 시간) 
