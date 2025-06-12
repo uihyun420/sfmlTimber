@@ -4,6 +4,35 @@
 
 enum class Side { LEFT, RIGHT, NONE }; // 열거형 , 사용자 정의 데이터형
 
+
+void updateBranches(Side* branches, int size)
+{
+	for (int i = size - 1; i > 0; i--)
+	{
+		branches[i] = branches[i - 1];
+	}
+
+	int r = rand() % 3;
+	switch (r)
+	{
+	case 0:
+		branches[0] = Side::LEFT;
+		break;
+
+	case 1:
+		branches[0] = Side::RIGHT;
+		break;
+
+	default:
+		branches[0] = Side::NONE;
+		break;
+	}
+
+}
+
+
+
+
 // 업데이트, 드로우 계속 반복
 
 
@@ -105,13 +134,10 @@ int main()
 	sf::Sprite spritePlayer;
 	spritePlayer.setTexture(texturePlayer);
 	spritePlayer.setOrigin(texturePlayer.getSize().x * 0.5f, texturePlayer.getSize().y);
-	spritePlayer.setPosition(1920*0.5f, 950.f);
-
-	
-	Side playerSide = Side::RIGHT;
-	
+	spritePlayer.setPosition(1920 * 0.5f, 950.f);
 
 
+	Side sideplayer = Side::RIGHT; // 플레이어가 바라보는 방향을 설정하기 위해 위치 변수 선언
 
 
 
@@ -124,8 +150,25 @@ int main()
 		spriteBranch[i].setTexture(textureBranch);
 		spriteBranch[i].setOrigin(textureTree.getSize().x * -0.5f, 0.f);
 		spriteBranch[i].setPosition(1920 * 0.5, i * 150.f);
-	}
 
+
+		int r = rand() % 3;
+		switch (r)
+		{
+		case 0:
+			sideBranch[i] = Side::LEFT;
+			break;
+
+		case 1:
+			sideBranch[i] = Side::RIGHT;
+			break;
+
+		default:
+			sideBranch[i] = Side::NONE;
+			break;
+		}
+	}
+	sideBranch[NUM_BRANCHES - 1] = Side::NONE;
 
 
 
@@ -203,9 +246,31 @@ int main()
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
-			if (event.type == sf::Event::Closed)
+			switch (event.type)
+			{
+			case sf::Event::Closed:
 				window.close();
+				break;
+			case sf::Event::KeyPressed:
+				switch (event.key.code)
+				{
+				case sf::Keyboard::Left:
+					sideplayer = Side::LEFT;
+					updateBranches(sideBranch, NUM_BRANCHES);
+					break;
+
+				case sf::Keyboard::Right:
+					sideplayer = Side::RIGHT;
+					updateBranches(sideBranch, NUM_BRANCHES);
+					break;
+				}
+				break;
+			case sf::Event::KeyReleased:
+				break;
+			}
 		}
+
+
 
 
 
@@ -248,21 +313,25 @@ int main()
 			}
 		}
 
-		
-		
-			switch (playerSide)
-			{
-			case Side::LEFT:
-				spritePlayer.setScale(-1.f, 1.f);
-				spritePlayer.setPosition(1920*0.5f-200, 900);
 
-				break;
-			case Side::RIGHT:
-				spritePlayer.setScale(1.f, 1.f);
-				spritePlayer.setPosition(1920 * 0.5f + 200, 900);
-				break;
-			}
-		
+
+
+		switch (sideplayer)
+		{
+		case Side::LEFT:
+			spritePlayer.setScale(-1.f, 1.f);
+			spritePlayer.setPosition(spriteTree.getPosition().x - 300.f, 950.f);
+
+			break;
+		case Side::RIGHT:
+			spritePlayer.setScale(1.f, 1.f);
+			spritePlayer.setPosition(spriteTree.getPosition().x + 300.f, 950.f);
+			break;
+		}
+
+
+
+
 
 
 		// cloud 배열 
@@ -309,15 +378,15 @@ int main()
 			if (sideBranch[i] != Side::NONE)
 			{
 				window.draw(spriteBranch[i]);
-			}		
+			}
 		}
 
 		window.draw(spritebee);
 
-			window.draw(spritePlayer);
+		window.draw(spritePlayer);
 
-		
-		
+
+
 		window.display();
 
 	}
