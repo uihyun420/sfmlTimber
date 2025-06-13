@@ -24,17 +24,15 @@ int main()
 	// sf::Texture → SFML에서 텍스처를 다루는 클래스 타입
 	// textureBackgroud; 변수 이름
 
+
 	sf::Texture textureTree;
 	textureTree.loadFromFile("graphics/tree.png");
 
-	sf::Texture textureCloud;
-	textureCloud.loadFromFile("graphics/cloud.png");
+	sf::Texture texturecloud1;
+	texturecloud1.loadFromFile("graphics/cloud.png");
 
 	sf::Texture textureBee;
-	textureBee.loadFromFile("graphics/Bee.png");
-
-	
-
+	textureBee.loadFromFile("graphics/bee.png");
 
 
 	//--------------------------------------스프라이트----------------------------------------------------------
@@ -43,34 +41,24 @@ int main()
 	// sf::Sprite는 화면에 그릴 수 있는 이미지 객체
 	// 스프라이트에 이미 로드된 텍스처를 연결하는 코드 
 
+
 	sf::Sprite spriteTree;
 	spriteTree.setTexture(textureTree);
-	spriteTree.setOrigin(textureTree.getSize().x * 0.5f, 0.0f);
-	spriteTree.setPosition(1920 * 0.5f, 0.0f);
+	spriteTree.setOrigin(textureTree.getSize().x * 0.5f, 0.f);
+	spriteTree.setPosition(1920 * 0.5f, 0.f);
+
+
+	sf::Sprite spriteCloud1;
+	spriteCloud1.setTexture(texturecloud1);
+	spriteCloud1.setOrigin(0.f, 0.f);
+	spriteCloud1.setPosition(0.f, 0.f);
+	float cloudSpeed = rand() % 200 + 100; // 구름속도 변수 추가, 100 ~ 299 중 랜덤
+
 
 	sf::Sprite spriteBee;
 	spriteBee.setTexture(textureBee);
-	spriteBee.setOrigin(textureBee.getSize().x * 0.5f, textureBee.getSize().y * 0.5f);
-	spriteBee.setPosition(100.f, 850.f);
-
-	sf::Sprite spriteCloud1;
-	spriteCloud1.setTexture(textureCloud);
-	spriteCloud1.setOrigin(textureCloud.getSize().x * 0.5f, textureCloud.getSize().y * 0.5f);
-	spriteCloud1.setPosition(200.f, 100.f);
-
-	sf::Sprite spriteCloud2;
-	spriteCloud2.setTexture(textureCloud);
-	spriteCloud2.setOrigin(textureCloud.getSize().x * 0.5f, textureCloud.getSize().y * 0.5f);
-	spriteCloud2.setPosition(200.f, 300.f);
-
-	sf::Sprite spriteCloud3;
-	spriteCloud3.setTexture(textureCloud);
-	spriteCloud3.setOrigin(textureCloud.getSize().x * 0.5f, textureCloud.getSize().y * 0.5f);
-	spriteCloud3.setPosition(200.f, 500.f);
-
-
-
-
+	spriteBee.setOrigin(0.f, 0.f);
+	spriteBee.setPosition(0.f, 850.f);
 
 
 
@@ -95,10 +83,8 @@ int main()
 
 			//--------------------------------- 업데이트 -------------------------------------------------------------
 
-
-
-
-
+			spriteCloud1.move(cloudSpeed * deltaTime, 0.f); // move(x,y) 스프라이트를 x방향으로 y방향으로 이동시키는 함수
+	
 
 
 
@@ -106,12 +92,9 @@ int main()
 			window.clear();
 			window.draw(spriteBackground);
 			window.draw(spriteCloud1);
-			window.draw(spriteCloud2);
-			window.draw(spriteCloud3);
 			window.draw(spriteTree);
 			window.draw(spriteBee);
-
-
+			
 			window.display();
 		}
 	}
