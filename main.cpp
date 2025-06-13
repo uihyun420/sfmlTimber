@@ -1,9 +1,9 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <ctime>
 #include <cstdlib>
 
 enum class Side { LEFT, RIGHT, NONE };
-
 
 void updateBranches(Side* branches, int size)
 {
@@ -30,11 +30,10 @@ void updateBranches(Side* branches, int size)
 int main()
 {
 	srand((int)time(0));
-	//sf::Clock clock; // 매 프레임마다 실제로 지난 시간(delta time)을 측정 가능
 
 	sf::RenderWindow window(sf::VideoMode(1920, 1080), "Timber!");
 
-	//
+	// 리소스
 	sf::Texture textureBackgroud;
 	textureBackgroud.loadFromFile("graphics/background.png");
 	sf::Texture textureTree;
@@ -47,28 +46,30 @@ int main()
 	texturePlayer.loadFromFile("graphics/player.png");
 	sf::Texture textureBranch;
 	textureBranch.loadFromFile("graphics/branch.png");
-
-
 	sf::Texture textureAxe;
 	textureAxe.loadFromFile("graphics/axe.png");
+	sf::Texture textureLog;
+	textureLog.loadFromFile("graphics/log.png");
 
 
-	sf::Font font; // 글자 변수
+	sf::Font font;
 	font.loadFromFile("fonts/KOMIKAP_.ttf");
 
+	sf::SoundBuffer bufferChop;
+	bufferChop.loadFromFile("sound/chop.wav");
+	sf::SoundBuffer bufferDeath;
+	bufferDeath.loadFromFile("sound/death.wav");
+	sf::SoundBuffer bufferOutOfTime;
+	bufferOutOfTime.loadFromFile("sound/out_of_time.wav");
 
-
-
-	// 
-
+	//
 	sf::Sprite spirteBackground;
-	spirteBackground.setTexture(textureBackgroud); // setTexture 스프라이트에 이미지를 지정할 때 사용하는 함수
-	sf::Sprite spirteTree;
-	spirteTree.setTexture(textureTree);
+	spirteBackground.setTexture(textureBackgroud);
+	sf::Sprite spriteTree;
+	spriteTree.setTexture(textureTree);
 	//spirteTree.setPosition(1920 * 0.5f - textureTree.getSize().x * 0.5f, 0);
-	spirteTree.setOrigin(textureTree.getSize().x * 0.5f, 0.f);
-	spirteTree.setPosition(1920 * 0.5f, 0.f);
-
+	spriteTree.setOrigin(textureTree.getSize().x * 0.5f, 0.f);
+	spriteTree.setPosition(1920 * 0.5f, 0.f);
 
 	sf::Sprite spriteBackgroundElement[4];
 	float speedElement[4];
@@ -109,7 +110,6 @@ int main()
 			{
 				directionElement[i].x = -1.f;
 				spriteBackgroundElement[i].setScale(1.f, 1.f);
-				spriteBackgroundElement[i].setScale(1.f, 1.f);
 			}
 			speedElement[i] = rand() % 200 + 100;
 			spriteBackgroundElement[i].setPosition(500, 700);
@@ -120,12 +120,24 @@ int main()
 	spritePlayer.setTexture(texturePlayer);
 	spritePlayer.setOrigin(texturePlayer.getSize().x * 0.5f, texturePlayer.getSize().y);
 	spritePlayer.setPosition(1920 * 0.5f, 950.f);
-
+	Side sidePlayer = Side::LEFT;
+	switch (sidePlayer)
+	{
+	case Side::LEFT:
+	{
+		spritePlayer.setScale(-1.f, 1.f);
+		spritePlayer.setPosition(spriteTree.getPosition().x - 300.f, 950.f);
+	}
+	break;
+	case Side::RIGHT:
+	{
+		spritePlayer.setScale(1.f, 1.f);
+		spritePlayer.setPosition(spriteTree.getPosition().x + 300.f, 950.f);
+	}
+	break;
+	}
 	sf::Sprite spriteAxe;
 	spriteAxe.setTexture(textureAxe);
-	spriteAxe.setOrigin(textureAxe.getSize().x * 0.5f, textureAxe.getSize().y * 0.5f);
-
-
 
 	const int NUM_BRANCHES = 6;
 	sf::Sprite spriteBranch[NUM_BRANCHES];
@@ -151,77 +163,104 @@ int main()
 		}
 	}
 	sideBranch[NUM_BRANCHES - 1] = Side::NONE;
+	for (int i = 0; i < NUM_BRANCHES; ++i)
+	{
+		switch (sideBranch[i])
+		{
+		case Side::LEFT:
+			spriteBranch[i].setScale(-1.f, 1.f);
+			break;
+		case Side::RIGHT:
+			spriteBranch[i].setScale(1.f, 1.f);
+			break;
+		}
+	}
+
+	sf::Sprite testLog;
+	testLog.setTexture(textureLog);
+	testLog.setOrigin(textureLog.getSize().x * 0.5f, textureLog.getSize().y);
+	sf::Vector2f logInitPosition = spriteTree.getPosition();
+	logInitPosition.y = textureTree.getSize().y;
+	testLog.setPosition(logInitPosition);
+
+	bool isActiveTestLog = false;
+	sf::Vector2f testLogDirection = { 1.f, -1.f };
+	float testLogSpeed = 2000.f;
+
+	sf::Vector2f gravity = { 0.f, 6000.f };
+	sf::Vector2f testLogVelocity = testLogDirection * testLogSpeed;
+
+
+
+
+
+
+
+	//새로운 통나무 배열 추가 
+	const int MAX_LOGS = 30;
+
+	sf::Sprite flyingLogs[MAX_LOGS];
+	sf::Vector2f flyingLogVelocities[MAX_LOGS];
+	bool isActiveFlyingLog[MAX_LOGS]; 
+
+
+	//초기화 , 위치 설정
+	for (int i = 0; i < MAX_LOGS; ++i)
+	{
+		flyingLogs[i].setTexture(textureLog);
+		flyingLogs[i].setOrigin(textureLog.getSize().x * 0.5f, textureLog.getSize().y);
+		flyingLogs[i].setPosition(logInitPosition);
+		isActiveFlyingLog[i] = false;
+	}
+
+
+
 
 
 	// UI
 	sf::Text textScore;
 	textScore.setFont(font);
-	textScore.setString("SCORE: 0"); 
-	textScore.setCharacterSize(100); // 텍스트의 높이 설정
-	textScore.setFillColor(sf::Color::White); // 텍스트 색 설정
+	textScore.setString("SCORE: 0");
+	textScore.setCharacterSize(100);
+	textScore.setFillColor(sf::Color::White);
 	textScore.setPosition(20, 20);
 
+	sf::Text textMessage;
+	textMessage.setFont(font);
+	textMessage.setString("Press Enter to start!");
+	textMessage.setCharacterSize(100);
+	textMessage.setFillColor(sf::Color::White);
+	textMessage.setPosition(1920.f * 0.5f, 1080 * 0.5f);
+	sf::Vector2f messageOrigin;
+	messageOrigin.x = textMessage.getLocalBounds().width * 0.5f;
+	messageOrigin.y = textMessage.getLocalBounds().height * 0.5f;
+	textMessage.setOrigin(messageOrigin);
 
-	sf::Text textStart;
-	textStart.setFont(font);
-	textStart.setCharacterSize(70); // 텍스트의 높이 설정
-	textStart.setFillColor(sf::Color::White); // 텍스트 색 설정
-	textStart.setString("Press Enter to start!");
-	textStart.setPosition(1920 * 0.5f - 400,1080 * 0.5f);
-
-
-
-
-
-
-
-	sf::RectangleShape timebar;
+	sf::RectangleShape timeBar;
 	float timeBarWidth = 400;
 	float timeBarHeight = 80;
-	timebar.setSize({ timeBarWidth, timeBarHeight });
-	timebar.setFillColor(sf::Color::Red);
+	timeBar.setSize({ timeBarWidth, timeBarHeight });
+	timeBar.setFillColor(sf::Color::Red);
+	timeBar.setPosition(1920.f * 0.5f - timeBarWidth * 0.5f, 1080.f - 100.f);
 
-
-	timebar.setPosition(1920 * 0.5f - timeBarWidth * 0.5f, 1080.f - 100.f);
-
+	//
+	sf::Sound soundChop;
+	soundChop.setBuffer(bufferChop);
+	sf::Sound soundDeath;
+	soundDeath.setBuffer(bufferDeath);
+	sf::Sound soundOutOfTime;
+	soundOutOfTime.setBuffer(bufferOutOfTime);
 
 	// 게임 데이터
-	bool isPlaying = false; // 게임중일때 True라는 소리
+	bool isPlaying = false;
 	int score = 0;
 	float remaingTime = 5.f;
-	float timeBarSpeed = timeBarWidth / 5.f;   // 5초
-
-
-
-	Side sidePlayer = Side::LEFT;
-	switch (sidePlayer)
-	{
-	case Side::LEFT:
-		spritePlayer.setScale(-1.f, 1.f);
-		spritePlayer.setPosition(spirteTree.getPosition().x - 300.f, 950.f);
-		// 도끼도 왼쪽 손에 붙이기
-		spriteAxe.setPosition(spritePlayer.getPosition().x + 130.f, spritePlayer.getPosition().y - 50.f);
-		spritePlayer.setScale(-1.f, 1.f);
-		break;
-	case Side::RIGHT:
-		spritePlayer.setScale(1.f, 1.f);
-		spritePlayer.setPosition(spirteTree.getPosition().x + 300.f, 950.f);
-
-		spriteAxe.setPosition(spritePlayer.getPosition().x - 100.f, spritePlayer.getPosition().y - 50.f);
-		spritePlayer.setScale(1.f, 1.f);
-		break;
-	}
-
-
+	float timeBarWidthPerSecond = timeBarWidth / 5.f;
 
 	sf::Clock clock;
 
 	bool isLeft = false;
 	bool isRight = false;
-	bool Axe = true;
-
-	bool stop = false;
-
 	while (window.isOpen())
 	{
 		sf::Time time = clock.restart();
@@ -234,8 +273,6 @@ int main()
 		bool isRightDown = false;
 		bool isRightUp = false;
 
-
-
 		while (window.pollEvent(event))
 		{
 			switch (event.type)
@@ -243,8 +280,6 @@ int main()
 			case sf::Event::Closed:
 				window.close();
 				break;
-
-
 			case sf::Event::KeyPressed:
 				switch (event.key.code)
 				{
@@ -254,128 +289,167 @@ int main()
 						isLeftDown = true;
 					}
 					isLeft = true;
-					Axe = false; // 누를 땐 도끼 숨김
 					break;
 				case sf::Keyboard::Right:
 					if (!isRight)
 					{
 						isRightDown = true;
-
 					}
 					isRight = true;
-					Axe = false;
 					break;
-
-
 				}
 				break;
-
 			case sf::Event::KeyReleased:
 				switch (event.key.code)
 				{
 				case sf::Keyboard::Left:
 					isLeft = false;
 					isLeftUp = true;
-					Axe = true;
-
 					break;
 				case sf::Keyboard::Right:
 					isRight = false;
 					isRightUp = true;
-					Axe = true;
-
 					break;
-
-
-				case sf::Keyboard::Enter:
-					if (isPlaying)
+				case sf::Keyboard::Return:
+					isPlaying = !isPlaying;
+					if (!isPlaying)
 					{
-						isPlaying = false;
-						textStart.setString("Press Enter to resume!");
+						textMessage.setString("Press Enter to resume!");
+						sf::Vector2f messageOrigin;
+						messageOrigin.x = textMessage.getLocalBounds().width * 0.5f;
+						messageOrigin.y = textMessage.getLocalBounds().height * 0.5f;
+						textMessage.setOrigin(messageOrigin);
 					}
 					else
 					{
-						isPlaying = true;
+						if (remaingTime == 0.f || sidePlayer == sideBranch[NUM_BRANCHES - 1])
+						{
+							score = 0;
+							textScore.setString("SCORE: " + std::to_string(score));
+							remaingTime = 5.f;
+							sideBranch[NUM_BRANCHES - 1] = Side::NONE;
+						}
+
 					}
-
 					break;
-
 				}
 				break;
 			}
-
 		}
 
-		if(isPlaying)
-		{ 
+		if (isPlaying)
+		{
 			remaingTime -= deltaTime;
-			if (remaingTime <= 0.f)
+			if (remaingTime < 0.f)
 			{
-				remaingTime = 5.f; // 타임바가 다 소모되었단 소리는 죽었단 소리
-				textStart.setString("Press Enter to restart!");
+				remaingTime = 0.f;
 				isPlaying = false;
+				textMessage.setString("Press Enter to restart!");
+				sf::Vector2f messageOrigin;
+				messageOrigin.x = textMessage.getLocalBounds().width * 0.5f;
+				messageOrigin.y = textMessage.getLocalBounds().height * 0.5f;
+				textMessage.setOrigin(messageOrigin);
+				soundOutOfTime.play();
 			}
-			
-
-			timebar.setSize({ timeBarSpeed * remaingTime, timeBarHeight });
-
-
-
-
+			timeBar.setSize({ timeBarWidthPerSecond * remaingTime, timeBarHeight });
 
 			// 업데이트
 			if (isRightDown || isLeftDown)
 			{
+				isActiveTestLog = true;
+				testLog.setPosition(logInitPosition);
+				testLogVelocity = testLogDirection * testLogSpeed;
+
+
+
+
+
+
+
 				if (isLeftDown)
 				{
 					sidePlayer = Side::LEFT;
-					if (sideBranch[NUM_BRANCHES - 1] == sidePlayer)
-					{
-						printf("나뭇가지에 맞았음!\n");
-						score = 0;
-						textScore.setString("SCORE: " + std::to_string(score));
-						isPlaying = false;
-						textStart.setString("Press Enter to restart!");
-						
-					}
-					else
-					{
-						score += 10; //  충돌하지 않았을때 점수가 오르니까 F
-						textScore.setString("SCORE: " + std::to_string(score));
-					}
-
 				}
 				if (isRightDown)
 				{
 					sidePlayer = Side::RIGHT;
-					if (sideBranch[NUM_BRANCHES - 1] == sidePlayer)
-					{
-						printf("나뭇가지에 맞았음!\n");
-						score = 0;
-						textScore.setString("SCORE: " + std::to_string(score));
-						isPlaying = false;
-						textStart.setString("Press Enter to restart!");
-
-					}
-					else
-					{
-						score += 10; //  충돌하지 않았을때 점수가 오르니까 
-						textScore.setString("SCORE: " + std::to_string(score));
-					}
-
 				}
+
+
+
+
+
+
+
+				for (int i = 0; i < MAX_LOGS; ++i)
+				{
+					if (!isActiveFlyingLog[i])
+					{
+						flyingLogs[i].setPosition(logInitPosition);
+						sf::Vector2f dir = (sidePlayer == Side::LEFT) ? sf::Vector2f(-1.f, -1.f) : sf::Vector2f(1.f, -1.f);
+						flyingLogVelocities[i] = dir * testLogSpeed;
+						isActiveFlyingLog[i] = true;
+						break; // 한 개만 발사
+					}
+				}
+
+
+
+
+
+
+
 				updateBranches(sideBranch, NUM_BRANCHES);
+				soundChop.play();
 
-
-			
+				if (sidePlayer == sideBranch[NUM_BRANCHES - 1])
+				{
+					isPlaying = false;
+					textMessage.setString("Press Enter to restart!");
+					sf::Vector2f messageOrigin;
+					messageOrigin.x = textMessage.getLocalBounds().width * 0.5f;
+					messageOrigin.y = textMessage.getLocalBounds().height * 0.5f;
+					textMessage.setOrigin(messageOrigin);
+					soundDeath.play();
+				}
+				else
+				{
+					score += 10;
+					textScore.setString("SCORE: " + std::to_string(score));
+				}
 			}
 
 
 
-			for (int i = 0; i < 3; ++i)
+
+
+
+			for (int i = 0; i < MAX_LOGS; ++i)
 			{
+				if (isActiveFlyingLog[i])
+				{
+					flyingLogVelocities[i] += gravity * deltaTime;
+
+					sf::Vector2f pos = flyingLogs[i].getPosition();
+					pos += flyingLogVelocities[i] * deltaTime;
+					flyingLogs[i].setPosition(pos);
+
+					if (pos.x < -200 || pos.x > 2200 || pos.y > 1200)
+					{
+						isActiveFlyingLog[i] = false;
+					}
+				}
+			}
 
 
+
+
+
+
+
+
+			for (int i = 0; i < 4; ++i)
+			{
 				sf::Vector2f position = spriteBackgroundElement[i].getPosition();
 				position += directionElement[i] * speedElement[i] * deltaTime;
 				spriteBackgroundElement[i].setPosition(position);
@@ -398,32 +472,6 @@ int main()
 				}
 			}
 
-			sf::Vector2f beePos = spriteBackgroundElement[3].getPosition();
-			beePos += directionElement[3] * speedElement[3] * deltaTime;
-			spriteBackgroundElement[3].setPosition(beePos);
-
-			// 화면 밖이면 방향/위치/속도 랜덤 설정
-			if (beePos.x < -200 || beePos.x > 1920 + 200)
-			{
-				float random = static_cast<float>(rand()) / RAND_MAX;
-
-				if (random < 0.5f)
-				{
-					directionElement[3].x = 1.f;
-					spriteBackgroundElement[3].setScale(-1.f, 1.f);
-					spriteBackgroundElement[3].setPosition(-150.f, 800.f); // 왼쪽에서 등장
-				}
-				else
-				{
-					directionElement[3].x = -1.f;
-					spriteBackgroundElement[3].setScale(1.f, 1.f);
-					spriteBackgroundElement[3].setPosition(1920.f + 150.f, 800.f); // 오른쪽에서 등장
-				}
-
-				speedElement[3] = rand() % 200 + 100; // 속도 재설정
-			}
-
-
 			for (int i = 0; i < NUM_BRANCHES; ++i)
 			{
 				switch (sideBranch[i])
@@ -435,41 +483,56 @@ int main()
 					spriteBranch[i].setScale(1.f, 1.f);
 					break;
 				}
-
 			}
 
 			switch (sidePlayer)
 			{
 			case Side::LEFT:
+			{
 				spritePlayer.setScale(-1.f, 1.f);
-				spritePlayer.setPosition(spirteTree.getPosition().x - 300.f, 950.f);
+				spritePlayer.setPosition(spriteTree.getPosition().x - 300.f, 950.f);
+				spriteAxe.setScale(1.f, 1.f);
 
-				//도끼 위치도 업데이트
-				spriteAxe.setPosition(spritePlayer.getPosition().x + 130.f, spritePlayer.getPosition().y - 55.f);
-				spriteAxe.setScale(-1.f, 1.f);
-				break;
+				sf::Vector2f pos = spritePlayer.getPosition();
+				pos.x += 50.f;
+				pos.y -= 75.f;
+				spriteAxe.setPosition(pos);
+			}
+			break;
 			case Side::RIGHT:
+			{
 				spritePlayer.setScale(1.f, 1.f);
-				spritePlayer.setPosition(spirteTree.getPosition().x + 300.f, 950.f);
-
-				spriteAxe.setPosition(spritePlayer.getPosition().x - 100.f, spritePlayer.getPosition().y - 55.f);
+				spritePlayer.setPosition(spriteTree.getPosition().x + 300.f, 950.f);
 				spriteAxe.setScale(-1.f, 1.f);
-				break;
+				sf::Vector2f pos = spritePlayer.getPosition();
+				pos.x -= 50.f;
+				pos.y -= 75.f;
+				spriteAxe.setPosition(pos);
+			}
+			break;
+			}
+
+			if (isActiveTestLog)
+			{
+				testLogVelocity += gravity * deltaTime;
+
+				sf::Vector2f position = testLog.getPosition();
+				position += testLogVelocity * deltaTime;
+				testLog.setPosition(position);
 			}
 
 
-	}
-
+		}
 		// 그리기
 		window.clear();
 
-
+		// WORLD
 		window.draw(spirteBackground);
 		for (int i = 0; i < cloudCount; ++i)
 		{
 			window.draw(spriteBackgroundElement[i]);
 		}
-		window.draw(spirteTree);
+		window.draw(spriteTree);
 		for (int i = 0; i < NUM_BRANCHES; ++i)
 		{
 			if (sideBranch[i] != Side::NONE)
@@ -478,31 +541,36 @@ int main()
 			}
 		}
 
+		for (int i = 0; i < MAX_LOGS; ++i)
+		{
+			if (isActiveFlyingLog[i])
+			{
+				window.draw(flyingLogs[i]);
+			}
+		}
+
+		//window.draw(testLog);
+
 		for (int i = cloudCount; i < 4; ++i)
 		{
 			window.draw(spriteBackgroundElement[i]);
 		}
 
-
 		window.draw(spritePlayer);
-
-		if (Axe)
+		if (isLeft || isRight)
 		{
 			window.draw(spriteAxe);
 		}
 
+		// UI 
 		window.draw(textScore);
+		window.draw(timeBar);
 
 		if (!isPlaying)
 		{
-			window.draw(textStart);
+			window.draw(textMessage);
 		}
-
-
-
-		window.draw(timebar);
 		window.display();
-
 	}
 
 	return 0;
