@@ -71,6 +71,7 @@ int main()
 	spriteTree.setOrigin(textureTree.getSize().x * 0.5f, 0.f);
 	spriteTree.setPosition(1920 * 0.5f, 0.f);
 
+
 	sf::Sprite spriteBackgroundElement[4];
 	float speedElement[4];
 	sf::Vector2f directionElement[4];
@@ -86,7 +87,7 @@ int main()
 			float random = (float)rand() / RAND_MAX; // 0.f ~ 1.f
 			if (random < 0.5f)
 			{
-				directionElement[i].x = 1.f;
+				directionElement[i].x = 1.f; 
 				spriteBackgroundElement[i].setScale(-1.f, 1.f);
 				spriteBackgroundElement[i].setPosition(-150, rand() % 300 + 100);
 			}

@@ -17,30 +17,35 @@ int main()
 
 	sf::RenderWindow window(sf::VideoMode(1920, 1080), "Timber!");
 
-
-	//--------------------------------------텍스처--------------------------------------------------------------
-	sf::Texture textureBackgroud;
-	textureBackgroud.loadFromFile("graphics/background.png");
-	// sf::Texture → SFML에서 텍스처를 다루는 클래스 타입
-	// textureBackgroud; 변수 이름
-
+	sf::Texture textureBackground;
+	textureBackground.loadFromFile("graphics/background.png");
 
 	sf::Texture textureTree;
 	textureTree.loadFromFile("graphics/tree.png");
 
-	sf::Texture texturecloud1;
-	texturecloud1.loadFromFile("graphics/cloud.png");
 
 	sf::Texture textureBee;
 	textureBee.loadFromFile("graphics/bee.png");
 
 
-	//--------------------------------------스프라이트----------------------------------------------------------
-	sf::Sprite spriteBackground;
-	spriteBackground.setTexture(textureBackgroud);
-	// sf::Sprite는 화면에 그릴 수 있는 이미지 객체
-	// 스프라이트에 이미 로드된 텍스처를 연결하는 코드 
+	sf::Texture textureCloud;
+	textureCloud.loadFromFile("graphics/cloud.png");
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+	sf::Sprite spriteBackground;
+	spriteBackground.setTexture(textureBackground);
 
 	sf::Sprite spriteTree;
 	spriteTree.setTexture(textureTree);
@@ -48,17 +53,72 @@ int main()
 	spriteTree.setPosition(1920 * 0.5f, 0.f);
 
 
-	sf::Sprite spriteCloud1;
-	spriteCloud1.setTexture(texturecloud1);
-	spriteCloud1.setOrigin(0.f, 0.f);
-	spriteCloud1.setPosition(0.f, 0.f);
-	float cloudSpeed = rand() % 200 + 100; // 구름속도 변수 추가, 100 ~ 299 중 랜덤
-
-
 	sf::Sprite spriteBee;
 	spriteBee.setTexture(textureBee);
 	spriteBee.setOrigin(0.f, 0.f);
-	spriteBee.setPosition(0.f, 850.f);
+	spriteBee.setPosition(50, 850);
+	
+	sf::Vector2f Beedirection;
+	float spriteSpeedBee;
+
+	float randomDirectionBee = (float)rand() / RAND_MAX;
+	spriteSpeedBee = 1.f;
+
+	if (randomDirectionBee < 0.5f)
+	{
+		Beedirection.x = -1.f; // 왼쪽으로
+		spriteBee.setScale(1.f, 1.f); // 방향 유지
+		spriteBee.setPosition(1920 + 150, 850);
+	}
+	else
+	{
+		Beedirection.x = 1.f; // 오른쪽으로
+		spriteBee.setScale(-1.f, 1.f); // 좌우반전
+		spriteBee.setPosition(-150, 850);
+	}
+
+
+
+
+	sf::Sprite spriteBackgroundElement[3];   // 구름 3개 	
+	sf::Vector2f directionElement[3];  // 각 배열의 요소들의 방향
+	float speedElement[3]; // 각 배열의 요소의 속도
+
+
+
+	for (int i = 0; i < 3; i++)
+	{
+		spriteBackgroundElement[i].setTexture(textureCloud);
+		speedElement[i] = rand() % 15 + 0.5f; // 1 ~ 3 사이의 속도를 각 요소에 설정
+		float random = (float)rand() / RAND_MAX; // 이동방향과 시작 위치 설정 / 0.0에서 1.0 사이의 실수값을 생성하는 코드
+		// 즉 random = 0.0에서 1.0 사이의 실수값을 생성 
+
+		if (random < 0.5f)     // < 50퍼센트 
+		{
+			directionElement[i].x = 1.f;  // 구름을 x축 오른쪽 으로 이동
+			spriteBackgroundElement[i].setOrigin(-150, 0.f);
+			spriteBackgroundElement[i].setScale(1.f, 1.f);
+			// 구름 이미지가 이동 방향에 자연스럽게 맞게 보이도록 시각효과 조정,   x = -1.f 좌우반전
+			spriteBackgroundElement[i].setPosition(0.f, rand() % 580 + 10);
+			// -150은 왼쪽 화면 밖에서부터 서서히 들어오는 효과를 줌. 
+			// rand() % 300 + 100은 y축 위치를 100 ~ 399 범위에서 랜덤하게 선택
+		}
+
+		else    // > 50퍼센트
+		{
+			directionElement[i].x = -1.f;
+			spriteBackgroundElement[i].setOrigin(0.f, 0.f);
+			spriteBackgroundElement[i].setScale(1.f, 1.f);
+			spriteBackgroundElement[i].setPosition(1920 + 150, rand() % 580 + 10);
+			// 오른쪽 화면 밖 150픽셀에서부터 서서히 왼쪽으로 들어옴
+		}
+
+
+
+
+
+	}
+
 
 
 
@@ -81,23 +141,90 @@ int main()
 
 
 
-			//--------------------------------- 업데이트 -------------------------------------------------------------
-
-			spriteCloud1.move(cloudSpeed * deltaTime, 0.f); // move(x,y) 스프라이트를 x방향으로 y방향으로 이동시키는 함수
-	
 
 
+			//---------------------------------------- 업데이트 ----------------------------------------------------------------------------
+			for (int i = 0; i < 3; i++)
+			{
+				sf::Vector2f position = spriteBackgroundElement[i].getPosition();
+				// Vector2f 위치, 방향, 속도 등 표현하는 타입
+				// 변수이름(position) 선언,  getPosition(); 구름의 현재 위치를 가져옴
 
-			//------------------------------- 그리기--------------------------------------------------------------------
+				position += directionElement[i] * speedElement[i] * deltaTime;
+				// 구름의 위치를 시간에 따라 자연스럽게 이동시킴 / 한 프레임에서 다음 프레임까지의 시간
+				// 방향 x 속도 x 시간 = 이동 거리
+				// 즉 position은 현재 구름의 포지션에 이동 거리를 할당하는 것.
+
+				spriteBackgroundElement[i].setPosition(position);
+				// i번째 구름을 position 좌표로 이동시켜라. 라는 의미 
+
+				if (position.x < -200 || position.x>1920 + 200)
+					// 화면 해상도가 1920*1080이기 때문에 -200은 화면 밖, 2120은 화면 오른쪽 밖
+					// 화면 밖으로 나갔는지의 가정
+				{
+					float random = (float)rand() / RAND_MAX;  // 0.0 ~ 1.0 사이의 난수 설정 
+					if (random < 0.5f)
+					{
+						directionElement[i].x = 1.f; // 오른쪽 이동
+						spriteBackgroundElement[i].setScale(-1.f, 1.f); // 좌우 반전
+						spriteBackgroundElement[i].setPosition(-150, rand() % 580 + 10);
+					}
+					else
+					{
+						directionElement[i].x = -1.f; // 왼쪽으로 이동
+						spriteBackgroundElement[i].setScale(1.f, 1.f);
+						spriteBackgroundElement[i].setPosition(1920 + 200, rand() % 580 + 10);
+					}
+				}
+
+				speedElement[i] = rand() % 15 + 0.5f;
+
+
+				sf::Vector2f beePosition = spriteBee.getPosition(); // 벌의 현재 위치
+				beePosition += Beedirection * spriteSpeedBee * deltaTime;
+				spriteBee.setPosition(beePosition);
+
+
+				if (beePosition.x < -200 || beePosition.x> 1920 + 200)
+				{
+					spriteSpeedBee = rand() % 5 + 5;
+
+					float randomDirectionBee = (float)rand() / RAND_MAX;
+
+					if (randomDirectionBee < 0.5f)
+					{
+						Beedirection.x = -1.f;
+						spriteBee.setScale(1.f, 1.f);
+						spriteBee.setPosition(1920 + 150, 850);
+					}
+					else
+					{
+						Beedirection.x = 1.f;
+						spriteBee.setScale(-1.f, 1.f);
+						spriteBee.setPosition(-150, 850);
+					}
+				}
+
+				
+
+			}
+
+
+
+
 			window.clear();
 			window.draw(spriteBackground);
-			window.draw(spriteCloud1);
+
+			for (int i = 0; i < 3; i++)
+			{
+				window.draw(spriteBackgroundElement[i]);
+			}
+
 			window.draw(spriteTree);
 			window.draw(spriteBee);
-			
+
 			window.display();
 		}
 	}
 
 }
-
