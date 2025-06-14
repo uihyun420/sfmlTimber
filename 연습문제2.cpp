@@ -31,11 +31,13 @@ int main()
 	sf::Texture textureCloud;
 	textureCloud.loadFromFile("graphics/cloud.png");
 
+	sf::Texture texturePlayer;
+	texturePlayer.loadFromFile("graphics/player.png");
 
 
-
-
-
+	sf::Texture textureAxe;
+	textureAxe.loadFromFile("graphics/axe.png");
+	bool isPlayerAxeLeft = false;
 
 
 
@@ -113,25 +115,35 @@ int main()
 			// 오른쪽 화면 밖 150픽셀에서부터 서서히 왼쪽으로 들어옴
 		}
 
-
-
-
-
 	}
 
+
+	sf::Sprite spritePlayer;
+	spritePlayer.setTexture(texturePlayer);
+	spritePlayer.setOrigin(texturePlayer.getSize().x * 0.5f, texturePlayer.getSize().y * 0.5f);
+	spritePlayer.setPosition(1920 * 0.5f, 950);
+
+
+
+	sf::Sprite spriteAxe;
+	spriteAxe.setTexture(textureAxe);
+	spriteAxe.setOrigin(textureAxe.getSize().x * 0.5f, textureAxe.getSize().y * 0.5f);
+	spriteAxe.setPosition(spritePlayer.getPosition().x + texturePlayer.getSize().x * 0.5f - 50.f, spritePlayer.getPosition().y);    
+	// 도끼가 플레이어를 따라다니도록, setposition = 캐릭터 오른쪽 끝
 
 
 
 
 	//--------------------------------- 이벤트 루프 -------------------------------------------------------------
-	while (window.isOpen())
-	{
-		sf::Time time = clock.restart();
-		float deltaTime = time.asSeconds();
+
+
 
 
 		while (window.isOpen())
 		{
+			sf::Time time = clock.restart();
+			float deltaTime = time.asSeconds();
+
 			sf::Event event;
 			while (window.pollEvent(event))
 			{
@@ -180,36 +192,43 @@ int main()
 				speedElement[i] = rand() % 15 + 0.5f;
 
 
-				sf::Vector2f beePosition = spriteBee.getPosition(); // 벌의 현재 위치
-				beePosition += Beedirection * spriteSpeedBee * deltaTime;
-				spriteBee.setPosition(beePosition);
-
-
-				if (beePosition.x < -200 || beePosition.x> 1920 + 200)
-				{
-					spriteSpeedBee = rand() % 5 + 5;
-
-					float randomDirectionBee = (float)rand() / RAND_MAX;
-
-					if (randomDirectionBee < 0.5f)
-					{
-						Beedirection.x = -1.f;
-						spriteBee.setScale(1.f, 1.f);
-						spriteBee.setPosition(1920 + 150, 850);
-					}
-					else
-					{
-						Beedirection.x = 1.f;
-						spriteBee.setScale(-1.f, 1.f);
-						spriteBee.setPosition(-150, 850);
-					}
-				}
-
-				
-
 			}
+			sf::Vector2f beePosition = spriteBee.getPosition(); // 벌의 현재 위치
+			beePosition += Beedirection * spriteSpeedBee * deltaTime;
+			spriteBee.setPosition(beePosition);
 
 
+			if (beePosition.x < -200 || beePosition.x> 1920 + 200)
+			{
+				spriteSpeedBee = rand() % 5 + 5;
+
+				float randomDirectionBee = (float)rand() / RAND_MAX;
+
+				if (randomDirectionBee < 0.5f)
+				{
+					Beedirection.x = -1.f;
+					spriteBee.setScale(1.f, 1.f);
+					spriteBee.setPosition(1920 + 150, 850);
+				}
+				else
+				{
+					Beedirection.x = 1.f;
+					spriteBee.setScale(-1.f, 1.f);
+					spriteBee.setPosition(-150, 850);
+				}
+			}
+			
+
+			if (isPlayerAxeLeft)
+			{
+				spriteAxe.setPosition(spritePlayer.getPosition().x - texturePlayer.getSize().x * 0.5f + 50.f, spritePlayer.getPosition().y);
+				spriteAxe.setScale(-1.f, 1.f);
+			}
+			else
+			{
+				spriteAxe.setPosition(spritePlayer.getPosition().x + texturePlayer.getSize().x * 0.5f + 50.f, spritePlayer.getPosition().y);
+				spriteAxe.setScale(1.f, 1.f);
+			}
 
 
 			window.clear();
@@ -222,9 +241,10 @@ int main()
 
 			window.draw(spriteTree);
 			window.draw(spriteBee);
+			window.draw(spritePlayer);
+			window.draw(spriteAxe);
 
 			window.display();
 		}
 	}
 
-}
