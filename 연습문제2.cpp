@@ -2,6 +2,36 @@
 #include <ctime>
 #include <cstdlib>
 
+
+
+
+enum  class Side { LEFT, RIGHT, NONE }; // 열거형(enum) 
+void updateBranches(Side* Branches, int size)
+{
+	for (int i = size - 1; i > 0; i--)
+	{
+		Branches[i] = Branches[i - 1];  // 가지 배열을 한 칸씩 뒤로 밀기
+	}
+
+	int r = rand() % 3;
+	switch (r)
+	{
+	case 0:
+		Branches[0] = Side::LEFT;
+		break;
+
+	case 1:
+		Branches[0] = Side::RIGHT;
+		break;
+
+	case 2:
+		Branches[0] = Side::NONE;
+		break;
+	}
+}
+
+
+
 int main()
 {
 	sf::Clock clock;
@@ -46,6 +76,9 @@ int main()
 	textureAxe.loadFromFile("graphics/axe.png");
 	bool isPlayerAxeLeft = false;
 
+
+	sf::Texture textureBranch;
+	textureBranch.loadFromFile("graphics/branch.png");
 
 
 
@@ -144,7 +177,61 @@ int main()
 
 
 
-		// 키보드 추가할 때 선언
+	const int NUM_BRANCHES = 6;   // const int 란 상수값으로 지정 
+	sf::Sprite spriteBranch[NUM_BRANCHES];
+	Side sideBranch[NUM_BRANCHES];
+
+
+
+	for (int i = 0; i < NUM_BRANCHES; i++)
+	{
+		spriteBranch[i].setTexture(textureBranch);
+		spriteBranch[i].setOrigin(textureTree.getSize().x * -0.5f, 0.f);  // 나무에 붙이기 위한 중심 설정 
+		spriteBranch[i].setPosition(1920 * 0.5f, 150.f); // y는 층별 위치 
+
+		int r = rand() % 3;
+		switch (r)
+		{
+		case 0:
+			sideBranch[i] = Side::LEFT;
+			break;
+
+		case 1:
+			sideBranch[i] = Side::RIGHT;
+			break;
+
+		case 2:
+			sideBranch[i] = Side::NONE;
+			break;
+		}
+
+	}
+
+	sideBranch[NUM_BRANCHES - 1] = Side::NONE;   // 가장 위쪽 가지(맨 마지막 인덱스)를 비워두는 코드 , 나무의 꼭대기에는 가지가 없게 하거나, 게임 시작 시 충돌 방지 등으로 사용가능
+	{
+		for (int i = 0; i < NUM_BRANCHES; i++)
+		{
+			switch (sideBranch[i])
+			{
+			case Side::LEFT:
+				spriteBranch[i].setScale(-1.f, 1.f);
+				break;
+
+			case Side::RIGHT:
+				spriteBranch[i].setScale(1.f, 1.f);
+				break;
+			}
+		}
+	}
+
+
+
+
+
+
+
+
+	// 키보드 추가할 때 선언
 	bool isLeft = false;       // 왼쪽 키가 눌린 상태인지
 	bool isRight = false;      // 오른쪽 키가 눌린 상태인지
 
@@ -207,8 +294,8 @@ int main()
 					isLeftUp = true;           // 왼쪽 키가 떼어진 순간 임을 표시 
 					break;
 
-				case sf::Keyboard::Right:      
-					isRight = false; 
+				case sf::Keyboard::Right:
+					isRight = false;
 					isRightUp = true;
 					break;
 				}
@@ -294,11 +381,13 @@ int main()
 		{
 			spritePlayer.setPosition(1920 * 0.5f - 200, 950);        // 플레이어가 중앙에서 왼쪽으로 이동 
 			isPlayerAxeLeft = true;                                  // 이때 도끼는 왼쪽에 있어야 하므로 상태 저장
+			updateBranches(sideBranch, NUM_BRANCHES);
 		}
-		else if(isRightDown)
+		else if (isRightDown)
 		{
 			spritePlayer.setPosition(1920 * 0.5f + 200, 950);        // 플레이어가 중앙에서 오른쪽으로 이동 
 			isPlayerAxeLeft = false;                                  // 이때 도끼는 오른쪽에 있어야 하므로 상태 저장
+			updateBranches(sideBranch, NUM_BRANCHES);
 		}
 
 
@@ -313,6 +402,33 @@ int main()
 			spriteAxe.setPosition(spritePlayer.getPosition().x + texturePlayer.getSize().x * 0.5f + 50.f, spritePlayer.getPosition().y);
 			spriteAxe.setScale(1.f, 1.f);
 		}
+
+		
+
+		for (int i = 0; i < NUM_BRANCHES; i++)
+		{
+			float y = i * 150.f; // 가지 층별 간격, 150px 간격으로 위로 올라감
+			spriteBranch[i].setPosition(1920 * 0.5f, y);
+
+			switch (sideBranch[i])
+			{
+			case Side::LEFT:
+				spriteBranch[i].setScale(-1.f, 1.f);
+				break;
+
+
+			case Side::RIGHT:
+				spriteBranch[i].setScale(1.f, 1.f);
+				break;
+
+			}
+		}
+
+
+
+
+
+
 
 
 
@@ -331,6 +447,14 @@ int main()
 		window.draw(spriteBee);
 		window.draw(spritePlayer);
 		window.draw(spriteAxe);
+
+		for (int i = 0; i < NUM_BRANCHES; i++)
+		{
+			if (sideBranch[i] != Side::NONE)
+			{
+				window.draw(spriteBranch[i]);
+			}
+		}
 
 		window.display();
 	}
